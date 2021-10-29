@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
-import discord_music_tracker
+import sc_archive
 
 setup(
     name='sc-archive',
-    version='1.0.0',
+    version='1.0.1',
     packages=find_packages(),
     author='7x11x13',
     install_requires=[
@@ -15,6 +15,7 @@ setup(
         'soundcloud-v2',
         'sqlalchemy'
     ],
+    python_requires='>=3.8',
     entry_points={
         'console_scripts': [
             'sc-archive-run = sc_archive.archive:run',

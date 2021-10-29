@@ -14,9 +14,9 @@ import pika
 from requests import HTTPError
 from soundcloud import SoundCloud, User, Track
 
-from sc_archive.config import init_config
-from sc_archive.rabbit import init_rabbitmq
-import sc_archive.sql as sql
+from .config import init_config
+from .rabbit import init_rabbitmq
+from .sql import init_sql, SQLArtist, SQLTrack
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -32,7 +32,7 @@ def run():
     if not url:
         logger.error(f"Must specify a url for SQLAlchemy in {config_file}")
         sys.exit(1)
-    Session = sql.init_sql(url)
+    Session = SQLinit_sql(url)
 
     # init rabbitmq
     url = config.get("rabbit", "url")
@@ -64,7 +64,7 @@ def run():
             sys.exit(1)
 
     def insert_artist(session, artist: User):
-        artist = sql.Artist.from_dataclass(artist)
+        artist = SQLArtist.from_dataclass(artist)
         session.add(artist)
         publish_message("artists", {
             "event": "created",
@@ -72,8 +72,8 @@ def run():
             "artist": artist.to_dict()
         })
 
-    def insert_track(session, artist: sql.Artist, track: Track, path: str):
-        track = sql.Track.from_dataclass(track)
+    def insert_track(session, artist: SQLArtist, track: Track, path: str):
+        track = SQLTrack.from_dataclass(track)
         track.file_path = path
         session.add(track)
         publish_message("tracks", {
@@ -83,7 +83,7 @@ def run():
             "track": track.to_dict()
         })
 
-    def update_artist(session, old_artist: sql.Artist, new_artist: User):
+    def update_artist(session, old_artist: SQLArtist, new_artist: User):
         changes = old_artist.update_from_dataclass(new_artist)
         if old_artist.deleted:
             changes["deleted"] = (old_artist.deleted.isoformat(), None)
@@ -95,7 +95,7 @@ def run():
                 "artist": old_artist.to_dict()
             })
 
-    def update_track(session, artist: sql.Artist, old_track: sql.Track, new_track: Track, path: str = None):
+    def update_track(session, artist: SQLArtist, old_track: SQLTrack, new_track: Track, path: str = None):
         changes = old_track.update_from_dataclass(new_track)
         if old_track.deleted:
             changes["deleted"] = (old_track.deleted.isoformat(), None)
@@ -111,7 +111,7 @@ def run():
                 "track": old_track.to_dict()
             })
 
-    def delete_artist(session, artist: sql.Artist):
+    def delete_artist(session, artist: SQLArtist):
         publish_message("artists", {
             "event": "deleted",
             "changes": None,
@@ -120,7 +120,7 @@ def run():
         artist.tracking = False
         artist.deleted = datetime.datetime.utcnow()
 
-    def delete_track(session, artist: sql.Artist, track: sql.Track):
+    def delete_track(session, artist: SQLArtist, track: SQLTrack):
         publish_message("tracks", {
             "event": "deleted",
             "changes": None,
@@ -129,7 +129,7 @@ def run():
         })
         track.deleted = datetime.datetime.utcnow()
 
-    def download_track(sc: SoundCloud, artist: sql.Artist, track: sql.Track) -> Optional[str]:
+    def download_track(sc: SoundCloud, artist: SQLArtist, track: SQLTrack) -> Optional[str]:
         """
         Downloads a track and returns relative path to the file
         """
@@ -167,9 +167,9 @@ def run():
             return None
 
     def download_tracks(session, sc: SoundCloud, artist: User):
-        artist = sql.Artist.from_dataclass(artist)
-        tracks = {t.id: t for t in session.query(sql.Track).filter(
-            sql.Track.user_id == artist.id).all()}
+        artist = SQLArtist.from_dataclass(artist)
+        tracks = {t.id: t for t in session.query(SQLTrack).filter(
+            SQLTrack.user_id == artist.id).all()}
         for track in sc.get_user_tracks(artist.id, limit=5000):
             # remove utc timezone to compare with database track
             track.last_modified = track.last_modified.replace(tzinfo=None)
@@ -208,7 +208,7 @@ def run():
 
             with Session() as session:
                 # get all not deleted artists
-                artists = {a.id: a for a in session.query(sql.Artist).all()}
+                artists = {a.id: a for a in session.query(SQLArtist).all()}
                 for artist in sc.get_user_following(user_id, limit=5000):
                     # remove utc timezone to compare with database artist
                     artist.last_modified = artist.last_modified.replace(

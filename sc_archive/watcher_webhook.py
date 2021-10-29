@@ -5,8 +5,8 @@ import logging
 import pika
 import requests
 
-from sc_archive.config import init_config
-from sc_archive.rabbit import init_rabbitmq
+from .config import init_config
+from .rabbit import init_rabbitmq
 
 config = init_config()
 

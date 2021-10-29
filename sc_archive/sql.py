@@ -42,7 +42,7 @@ class SQLObj:
         return data
 
 Base = declarative_base()
-class Artist(Base, SQLObj):
+class SQLArtist(Base, SQLObj):
     __tablename__ = "artist"
     id = Column(Integer, primary_key=True)
     avatar_url = Column(String)
@@ -53,7 +53,7 @@ class Artist(Base, SQLObj):
     deleted = Column(DateTime)
     tracking = Column(Boolean, nullable=False, default=True)
 
-class Track(Base, SQLObj):
+class SQLTrack(Base, SQLObj):
     __tablename__ = "track"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("artist.id"), index=True)
