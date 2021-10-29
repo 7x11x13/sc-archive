@@ -43,7 +43,7 @@ def run():
             channel.basic_publish(exchange, routing_key,
                                 json.dumps(data).encode("utf-8"))
         except (pika.exceptions.ConnectionClosed, pika.exceptions.StreamLostError):
-            channel = init_rabbitmq(url)
+            channel = init_rabbitmq(config.get("rabbit", "url"))
             channel.basic_publish(exchange, routing_key,
                                 json.dumps(data).encode("utf-8"))
             
