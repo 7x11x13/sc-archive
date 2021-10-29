@@ -128,11 +128,7 @@ def error_callback(ch: pika.channel.Channel, method, properties, body):
 
 def run():
     # init rabbitmq
-    url = config.get("rabbit", "url")
-    if not url:
-        logger.error(f"Must specify a url for RabbitMQ in {config_file}")
-        sys.exit(1)
-    channel = init_rabbitmq(url)
+    channel = init_rabbitmq(config.get("rabbit", "url"))
     
     error_queue = channel.queue_declare("errors")
     artist_queue = channel.queue_declare("artists")

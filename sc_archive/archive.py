@@ -28,18 +28,10 @@ def run():
     global config
 
     # init sql
-    url = config.get("sql", "url")
-    if not url:
-        logger.error(f"Must specify a url for SQLAlchemy in {config_file}")
-        sys.exit(1)
-    Session = SQLinit_sql(url)
+    Session = init_sql(config.get("sql", "url"))
 
     # init rabbitmq
-    url = config.get("rabbit", "url")
-    if not url:
-        logger.error(f"Must specify a url for RabbitMQ in {config_file}")
-        sys.exit(1)
-    channel = init_rabbitmq(url)
+    channel = init_rabbitmq(config.get("rabbit", "url"))
 
     def log_error(message: str):
         logger.error(message)

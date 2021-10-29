@@ -18,5 +18,14 @@ def init_config() -> ConfigParser:
         with open(config_file, "w", encoding="UTF-8") as f:
             config.write(f)
     config.read(config_file)
+    
+    if not config.get("sql", "url"):
+        logger.error(f"Must specify a url for SQLAlchemy in {config_file}")
+        sys.exit(1)
+    if not config.get("rabbit", "url"):
+        logger.error(f"Must specify a url for RabbitMQ in {config_file}")
+        sys.exit(1)
+        
     logger.info(f"Loaded config: {config_file}")
+        
     return config

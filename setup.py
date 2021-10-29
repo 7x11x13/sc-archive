@@ -4,7 +4,7 @@ import sc_archive
 
 setup(
     name='sc-archive',
-    version='1.0.1',
+    version='1.0.2',
     packages=find_packages(),
     author='7x11x13',
     install_requires=[
