@@ -153,7 +153,7 @@ def run():
         except KeyboardInterrupt:
             raise
         except:
-            sc.check_sc_valid()
+            check_sc_valid(sc)
             logger.exception("Could not download track")
             log_error(f"Could not download track: {track.permalink_url}")
             return None
