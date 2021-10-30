@@ -24,6 +24,7 @@ logger.setLevel(logging.INFO)
 config = init_config()
 channel = None
 
+
 def run():
     global channel
     global config
@@ -35,19 +36,25 @@ def run():
     channel = init_rabbitmq(config.get("rabbit", "url"))
 
     def log_error(message: str):
+        global channel
         logger.error(message)
-        channel.basic_publish("errors", "", message.encode("utf-8"))
+        try:
+            channel.basic_publish("errors", "", message.encode("utf-8"))
+        except (pika.exceptions.ConnectionClosed, pika.exceptions.StreamLostError):
+            channel = init_rabbitmq(config.get("rabbit", "url"))
+            channel.basic_publish(exchange, routing_key,
+                                  json.dumps(data).encode("utf-8"))
 
     def publish_message(exchange: str, data: dict, routing_key=""):
         global channel
         try:
             channel.basic_publish(exchange, routing_key,
-                                json.dumps(data).encode("utf-8"))
+                                  json.dumps(data).encode("utf-8"))
         except (pika.exceptions.ConnectionClosed, pika.exceptions.StreamLostError):
             channel = init_rabbitmq(config.get("rabbit", "url"))
             channel.basic_publish(exchange, routing_key,
-                                json.dumps(data).encode("utf-8"))
-            
+                                  json.dumps(data).encode("utf-8"))
+
     def check_sc_valid(sc: SoundCloud):
         if not sc.is_client_id_valid():
             log_error("Invalid client id!")
