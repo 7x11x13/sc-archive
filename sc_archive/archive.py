@@ -12,6 +12,7 @@ from typing import Optional
 
 import pika
 from requests import HTTPError
+from requests.exceptions import ConnectionError
 from soundcloud import SoundCloud, User, Track
 
 from .config import init_config
@@ -226,6 +227,9 @@ def run():
                 session.commit()
         except HTTPError as err:
             log_error(f"HTTPError: {err.response.status_code}")
+            time.sleep(60)
+        except ConnectionError as err:
+            log_error(f"ConnectionError: {err}")
             time.sleep(60)
 
 
