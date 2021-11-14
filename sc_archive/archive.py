@@ -42,8 +42,7 @@ def run():
             channel.basic_publish("errors", "", message.encode("utf-8"))
         except (pika.exceptions.ConnectionClosed, pika.exceptions.StreamLostError):
             channel = init_rabbitmq(config.get("rabbit", "url"))
-            channel.basic_publish(exchange, routing_key,
-                                  json.dumps(data).encode("utf-8"))
+            channel.basic_publish("errors", "", message.encode("utf-8"))
 
     def publish_message(exchange: str, data: dict, routing_key=""):
         global channel
@@ -175,9 +174,9 @@ def run():
             track.last_modified = track.last_modified.replace(tzinfo=None)
             if track.id in tracks:
                 old_track = tracks.pop(track.id)
-                # download track if changed & update
+                # download track if changed or not downloaded yet & update
                 path = None
-                if track.full_duration != old_track.full_duration:
+                if old_track.file_path is None or track.full_duration != old_track.full_duration:
                     path = download_track(sc, artist, track)
                 if old_track.deleted or path or old_track.last_modified != track.last_modified:
                     update_track(session, artist, old_track, track, path)
