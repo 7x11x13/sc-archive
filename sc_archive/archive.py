@@ -177,12 +177,14 @@ def run():
                 # download track if changed or not downloaded yet & update
                 path = None
                 if old_track.file_path is None or track.full_duration != old_track.full_duration:
-                    path = download_track(sc, artist, track)
+                    if track.media.transcodings:
+                        path = download_track(sc, artist, track)
                 if old_track.deleted or path or old_track.last_modified != track.last_modified:
                     update_track(session, artist, old_track, track, path)
             else:
                 # insert & download track
-                path = download_track(sc, artist, track)
+                if track.media.transcodings:
+                    path = download_track(sc, artist, track)
                 insert_track(session, artist, track, path)
             session.commit()
         # remaining tracks are deleted tracks
