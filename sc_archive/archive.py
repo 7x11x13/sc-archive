@@ -234,6 +234,7 @@ def run():
                         delete_artist(session, artist)
                 session.commit()
         except HTTPError as err:
+            logger.exception(f"HTTPError: {err.response.status_code}")
             log_error(f"HTTPError: {err.response.status_code}")
             time.sleep(60)
         except ConnectionError as err:
