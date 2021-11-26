@@ -7,9 +7,9 @@ import pathlib
 import subprocess
 import sys
 import time
-from configparser import ConfigParser
 from typing import Optional
 
+import appdirs
 import pika
 from requests import HTTPError
 from requests.exceptions import ConnectionError
@@ -21,7 +21,10 @@ from .sql import init_sql, SQLArtist, SQLTrack
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-config = init_config()
+
+config_file = pathlib.Path(appdirs.user_config_dir("sc-archive"), "config.ini")
+config = init_config(config_file)
+
 channel = None
 
 
