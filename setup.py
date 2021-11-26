@@ -15,7 +15,7 @@ setup(
         'soundcloud-v2',
         'sqlalchemy'
     ],
-    python_requires='>=3.8',
+    python_requires='>=3.6',
     entry_points={
         'console_scripts': [
             'sc-archive-run = sc_archive.archive:run',

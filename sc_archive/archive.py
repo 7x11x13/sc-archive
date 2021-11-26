@@ -148,8 +148,7 @@ def run():
                                 "--name-format", f"{{id}}_{timestamp}_{{title}}",
                                 "--client-id", sc.client_id,
                                 "--auth-token", sc.auth_token,
-                                "--overwrite",
-                                "--strict"],
+                                "--overwrite"],
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                encoding="utf-8")
