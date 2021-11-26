@@ -142,7 +142,7 @@ def run():
                                 "--flac",
                                 "--original-art",
                                 "--path", dir_path,
-                                "--name-format", f"{{id}}_{{title}}_{timestamp}",
+                                "--name-format", f"{{id}}_{timestamp}_{{title}}",
                                 "--client-id", sc.client_id,
                                 "--auth-token", sc.auth_token,
                                 "--overwrite"],
@@ -151,7 +151,7 @@ def run():
                                encoding="utf-8")
             if p.returncode == 0:
                 path = glob.glob(str(dir_path.joinpath(
-                    f"{track.id}_*_{timestamp}*")))[0]
+                    f"{track.id}_{timestamp}*")))[0]
                 filename = os.path.basename(path)
                 return str(pathlib.Path(str(artist.id), filename))
             else:
