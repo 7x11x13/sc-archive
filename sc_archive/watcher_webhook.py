@@ -1,14 +1,17 @@
 import datetime
 import json
 import logging
+import pathlib
 
+import appdirs
 import pika
 import requests
 
 from .config import init_config
 from .rabbit import init_rabbitmq
 
-config = init_config()
+config_file = pathlib.Path(appdirs.user_config_dir("sc-archive"), "config.ini")
+config = init_config(config_file)
 
 def make_error_webhook_data(error: str) -> dict:
     return {

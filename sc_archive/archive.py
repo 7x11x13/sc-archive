@@ -202,7 +202,7 @@ def run():
         try:
 
             # reload config
-            config = init_config()
+            config = init_config(config_file)
 
             # init soundcloud
             client_id = config.get("soundcloud", "client_id")
