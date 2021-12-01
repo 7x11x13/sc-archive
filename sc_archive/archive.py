@@ -224,7 +224,13 @@ def run():
                     else:
                         insert_artist(session, artist)
                     session.commit()
-                    download_tracks(session, sc, artist)
+                    try:
+                        download_tracks(session, sc, artist)
+                    except KeyboardInterrupt:
+                        raise
+                    except:
+                        logger.exception(f"Could not download tracks from {artist.permalink_url}")
+                        log_error(f"Could not download tracks for {artist.permalink_url}")
                 # remaining artists are unfollowed or deleted artists
                 for artist_id, artist in artists.items():
                     if not artist.tracking:
@@ -243,6 +249,8 @@ def run():
         except ConnectionError as err:
             log_error(f"ConnectionError: {err}")
             time.sleep(60)
+        except KeyboardInterrupt:
+            sys.exit(1)
 
 
 def set_auth():
