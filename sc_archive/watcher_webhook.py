@@ -1,9 +1,7 @@
 import datetime
 import json
 import logging
-import pathlib
 
-import appdirs
 import pika
 import requests
 

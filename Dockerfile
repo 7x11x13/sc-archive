@@ -39,7 +39,7 @@ COPY . ./sc-archive
 # Leverage a bind mount to requirements.txt to avoid having to copy them into
 # into this layer.
 RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=bind,source=setup.py,target=setup.py \
+    --mount=type=bind,source=requirements.txt,target=./sc-archive/requirements.txt \
     python3 -m pip install -e ./sc-archive
 
 # Switch to the non-privileged user to run the application.
