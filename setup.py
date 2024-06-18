@@ -1,7 +1,5 @@
 from setuptools import setup, find_packages
 
-import sc_archive
-
 setup(
     name='sc-archive',
     version='1.0.2',
@@ -12,16 +10,14 @@ setup(
         'pika',
         'psycopg2',
         'requests',
-        'soundcloud-v2',
-        'sqlalchemy'
+        'scdl>=2.7.12',
+        'soundcloud-v2>=1.3.7',
+        'sqlalchemy>=1.4.0,<2.0.0'
     ],
     python_requires='>=3.6',
     entry_points={
         'console_scripts': [
-            'sc-archive-run = sc_archive.archive:run',
-            'sc-archive-run-watcher = sc_archive.watcher_webhook:run',
-            'sc-archive-set-auth = sc_archive.archive:set_auth',
-            'sc-archive-set-client-id = sc_archive.archive:set_client_id'
+            'sc-archive-run = sc_archive.archive:run'
         ]
     }
 )

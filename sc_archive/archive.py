@@ -6,24 +6,27 @@ import os
 import pathlib
 import subprocess
 import sys
+import threading
 import time
+import urllib.parse
 from typing import Optional
 
 import appdirs
 import pika
 from requests import HTTPError
+import requests
 from requests.exceptions import ConnectionError
 from soundcloud import SoundCloud, User, Track
 
 from .config import init_config
 from .rabbit import init_rabbitmq
 from .sql import init_sql, SQLArtist, SQLTrack
+from .watcher_webhook import run as run_webhooks
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-config_file = pathlib.Path(appdirs.user_config_dir("sc-archive"), "config.ini")
-config = init_config(config_file)
+config = init_config()
 
 channel = None
 
@@ -37,6 +40,26 @@ def run():
 
     # init rabbitmq
     channel = init_rabbitmq(config.get("rabbit", "url"))
+    
+    def get_sc_client():
+        user_id = int(config.get("soundcloud", "user_id"))
+        base_url = config.get("soundcloud", "cookie_server_url")
+        api_key = config.get("soundcloud", "cookie_server_api_key")
+        url = urllib.parse.urljoin(base_url, f"/get_cookies/soundcloud/{user_id}")
+        auth_token = None
+        with requests.get(url, headers = {"X-API-Key": api_key}) as r:
+            r.raise_for_status()
+            for cookie in r.json():
+                if cookie["name"] == "oauth_token":
+                    auth_token = cookie["value"]
+                    break
+        sc = SoundCloud(None, auth_token)
+        if auth_token is None:
+            raise Exception("Could not get oauth_token cookie")
+        if not sc.is_auth_token_valid():
+            raise Exception("Invalid auth token")
+        return sc
+        
 
     def log_error(message: str):
         global channel
@@ -56,14 +79,6 @@ def run():
             channel = init_rabbitmq(config.get("rabbit", "url"))
             channel.basic_publish(exchange, routing_key,
                                   json.dumps(data).encode("utf-8"))
-
-    def check_sc_valid(sc: SoundCloud):
-        if not sc.is_client_id_valid():
-            log_error("Invalid client id!")
-            sys.exit(1)
-        if not sc.is_auth_token_valid():
-            log_error("Invalid auth token!")
-            sys.exit(1)
 
     def insert_artist(session, artist: User):
         artist = SQLArtist.from_dataclass(artist)
@@ -131,10 +146,11 @@ def run():
         })
         track.deleted = datetime.datetime.utcnow()
 
-    def download_track(sc: SoundCloud, artist: SQLArtist, track: SQLTrack) -> Optional[str]:
+    def download_track(artist: SQLArtist, track: SQLTrack) -> Optional[str]:
         """
         Downloads a track and returns relative path to the file
         """
+        sc = get_sc_client()
         try:
             base_path = config.get("system", "data_path")
             dir_path = pathlib.Path(base_path, str(artist.id))
@@ -163,12 +179,12 @@ def run():
         except KeyboardInterrupt:
             raise
         except:
-            check_sc_valid(sc)
             logger.exception("Could not download track")
             log_error(f"Could not download track: {track.permalink_url}")
             return None
 
-    def download_tracks(session, sc: SoundCloud, artist: User):
+    def download_tracks(session, artist: User):
+        sc = get_sc_client()
         artist = SQLArtist.from_dataclass(artist)
         tracks = {t.id: t for t in session.query(SQLTrack).filter(
             SQLTrack.user_id == artist.id).all()}
@@ -181,13 +197,13 @@ def run():
                 path = None
                 if old_track.file_path is None or track.full_duration != old_track.full_duration:
                     if track.media.transcodings:
-                        path = download_track(sc, artist, track)
+                        path = download_track(artist, track)
                 if old_track.deleted or path or old_track.last_modified != track.last_modified:
                     update_track(session, artist, old_track, track, path)
             else:
                 # insert & download track
                 if track.media.transcodings:
-                    path = download_track(sc, artist, track)
+                    path = download_track(artist, track)
                 insert_track(session, artist, track, path)
             session.commit()
         # remaining tracks are deleted tracks
@@ -196,19 +212,20 @@ def run():
                 continue
             delete_track(session, artist, track)
             session.commit()
+            
+    # init webhooks
+    t = threading.Thread(target=run_webhooks, daemon=True)
+    t.start()
 
     while True:
         try:
 
             # reload config
-            config = init_config(config_file)
+            config = init_config()
 
             # init soundcloud
-            client_id = config.get("soundcloud", "client_id")
-            auth_token = config.get("soundcloud", "auth_token")
-            sc = SoundCloud(client_id, auth_token)
-            check_sc_valid(sc)
-            user_id = sc.get_me().id
+            sc = get_sc_client()
+            user_id = int(config.get("soundcloud", "user_id"))
 
             with Session() as session:
                 # get all not deleted artists
@@ -225,7 +242,7 @@ def run():
                         insert_artist(session, artist)
                     session.commit()
                     try:
-                        download_tracks(session, sc, artist)
+                        download_tracks(session, artist)
                     except KeyboardInterrupt:
                         raise
                     except:
@@ -251,25 +268,3 @@ def run():
             time.sleep(60)
         except KeyboardInterrupt:
             sys.exit(1)
-
-
-def set_auth():
-    global config
-    if len(sys.argv) < 2:
-        logger.error("Must specify auth token")
-        sys.exit(1)
-    auth = sys.argv[1]
-    config.set("soundcloud", "auth_token", auth)
-    with open(config_file, "w", encoding="UTF-8") as f:
-        config.write(f)
-
-
-def set_client_id():
-    global config
-    if len(sys.argv) < 2:
-        logger.error("Must specify client ID")
-        sys.exit(1)
-    client_id = sys.argv[1]
-    config.set("soundcloud", "client_id", client_id)
-    with open(config_file, "w", encoding="UTF-8") as f:
-        config.write(f)

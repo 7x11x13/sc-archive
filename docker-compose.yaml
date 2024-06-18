@@ -1,0 +1,64 @@
+name: archive
+
+networks:
+  archive_net:
+    external: false
+
+volumes:
+  rabbit_data:
+  postgres_data:
+
+secrets:
+  config:
+    file: .secret/config.ini
+
+services:
+  rabbitmq:
+    image: rabbitmq:3
+    restart: always
+    container_name: 'rabbitmq'
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 1s
+      timeout: 5s
+      retries: 3
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    networks:
+      - archive_net
+  db:
+    image: postgres:16
+    restart: always
+    container_name: 'db'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d archive -U archive"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_USER=archive
+      - POSTGRES_DB=archive
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - archive_net
+  archive:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+      - db
+    restart: always
+    secrets:
+      - config
+    environment:
+      - CONFIG_FILE_PATH=/run/secrets/config
+    volumes:
+      - ${ARCHIVE_PATH}:/app/soundcloud
+    networks:
+      - archive_net
