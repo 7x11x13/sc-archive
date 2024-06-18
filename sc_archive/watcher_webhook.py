@@ -75,6 +75,13 @@ def artist_callback(ch: pika.channel.Channel, method, properties, body):
                 old_value = old_value.replace("`", "\\`")
                 new_value = new_value.replace("`", "\\`")
                 content += f"{attr}: {old_value} -> {new_value}\n"
+                if attr == "avatar_url":
+                    webhook_data["embeds"].append(
+                        {"title": "Old", "image": {"url": old_value}}
+                    )
+                    webhook_data["embeds"].append(
+                        {"title": "New", "image": {"url": new_value}}
+                    )
             content += "```"
             webhook_data["content"] = content
         elif data["event"] == "deleted":
@@ -100,6 +107,13 @@ def track_callback(ch: pika.channel.Channel, method, properties, body):
                 old_value = old_value.replace("`", "\\`")
                 new_value = new_value.replace("`", "\\`")
                 content += f"{attr}: {old_value} -> {new_value}\n"
+                if attr == "artwork_url":
+                    webhook_data["embeds"].append(
+                        {"title": "Old", "image": {"url": old_value}}
+                    )
+                    webhook_data["embeds"].append(
+                        {"title": "New", "image": {"url": new_value}}
+                    )
             content += "```"
         elif data["event"] == "created":
             webhook_data["embeds"][0]["color"] = 0x8eff1c
@@ -109,7 +123,7 @@ def track_callback(ch: pika.channel.Channel, method, properties, body):
             webhook_url = config.get("watcher_webhook", "track_deleted_webhook")
         else:
             return
-        
+
         webhook_data["content"] = content
         result = requests.post(webhook_url, json=webhook_data)
         result.raise_for_status()
