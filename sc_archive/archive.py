@@ -11,7 +11,6 @@ import time
 import urllib.parse
 from typing import Optional
 
-import appdirs
 import pika
 from requests import HTTPError
 import requests
