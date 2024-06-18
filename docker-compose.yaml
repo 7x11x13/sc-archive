@@ -43,7 +43,7 @@ services:
       - POSTGRES_USER=archive
       - POSTGRES_DB=archive
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - archive_net
   archive:
