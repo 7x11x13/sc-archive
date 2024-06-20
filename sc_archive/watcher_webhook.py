@@ -72,6 +72,8 @@ def artist_callback(ch: pika.channel.Channel, method, properties, body):
             webhook_url = config.get("watcher_webhook", "artist_updated_webhook")
             content = "```\n"
             for attr, (old_value, new_value) in data["changes"].items():
+                old_value = str(old_value)
+                new_value = str(new_value)
                 old_value = old_value.replace("`", "\\`")
                 new_value = new_value.replace("`", "\\`")
                 content += f"{attr}: {old_value} -> {new_value}\n"
@@ -104,6 +106,8 @@ def track_callback(ch: pika.channel.Channel, method, properties, body):
             webhook_url = config.get("watcher_webhook", "track_updated_webhook")
             content = "\n```\n"
             for attr, (old_value, new_value) in data["changes"].items():
+                old_value = str(old_value)
+                new_value = str(new_value)
                 old_value = old_value.replace("`", "\\`")
                 new_value = new_value.replace("`", "\\`")
                 content += f"{attr}: {old_value} -> {new_value}\n"

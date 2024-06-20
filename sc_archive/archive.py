@@ -153,7 +153,8 @@ def run():
         try:
             base_path = config.get("system", "data_path")
             dir_path = pathlib.Path(base_path, str(artist.id))
-            dir_path.mkdir(parents=True, exist_ok=True)
+            os.umask(0)
+            dir_path.mkdir(mode=0o777, parents=True, exist_ok=True)
             timestamp = int(track.last_modified.timestamp())
             p = subprocess.run(["scdl",
                                 "-l", track.permalink_url,
