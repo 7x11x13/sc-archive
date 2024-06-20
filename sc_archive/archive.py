@@ -25,22 +25,22 @@ from .watcher_webhook import run as run_webhooks
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-config = init_config()
-
-channel = None
-
 
 def run():
-    global channel
-    global config
+    config = init_config()
+    channel: pika.channel.Channel = None
+    client: SoundCloud = None
 
     # init sql
     Session = init_sql(config.get("sql", "url"))
 
     # init rabbitmq
     channel = init_rabbitmq(config.get("rabbit", "url"))
-    
+
     def get_sc_client():
+        nonlocal client
+        if client is not None and client.is_client_id_valid() and client.is_auth_token_valid():
+            return client
         user_id = int(config.get("soundcloud", "user_id"))
         base_url = config.get("soundcloud", "cookie_server_url")
         api_key = config.get("soundcloud", "cookie_server_api_key")
@@ -57,11 +57,11 @@ def run():
             raise Exception("Could not get oauth_token cookie")
         if not sc.is_auth_token_valid():
             raise Exception("Invalid auth token")
-        return sc
-        
+        client = sc
+        return client
 
     def log_error(message: str):
-        global channel
+        nonlocal channel
         logger.error(message)
         try:
             channel.basic_publish("errors", "", message.encode("utf-8"))
@@ -70,7 +70,7 @@ def run():
             channel.basic_publish("errors", "", message.encode("utf-8"))
 
     def publish_message(exchange: str, data: dict, routing_key=""):
-        global channel
+        nonlocal channel
         try:
             channel.basic_publish(exchange, routing_key,
                                   json.dumps(data).encode("utf-8"))
@@ -211,7 +211,7 @@ def run():
                 continue
             delete_track(session, artist, track)
             session.commit()
-            
+
     # init webhooks
     t = threading.Thread(target=run_webhooks, daemon=True)
     t.start()
