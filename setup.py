@@ -9,7 +9,7 @@ setup(
         "pika",
         "psycopg2",
         "requests",
-        "scdl>=2.8.1",
+        "scdl>=2.9.5",
         "soundcloud-v2>=1.3.7",
         "sqlalchemy>=1.4.0,<2.0.0",
     ],
