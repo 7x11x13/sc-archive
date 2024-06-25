@@ -12,13 +12,20 @@ from .rabbit import init_rabbitmq
 config = init_config()
 
 MAX_DISCORD_FILE_SIZE = 25 * 1024 * 1024  # 25 MiB
+MAX_DISCORD_CONTENT_LENGTH = 2000
+MAX_DISCORD_EMBED_TITLE_LENGTH = 256
+MAX_DISCORD_EMBED_DESC_LENGTH = 4096
 
 
 def make_error_webhook_data(error: str) -> DiscordWebhook:
     webhook = DiscordWebhook("")
     webhook.username = "SoundCloud"
     webhook.add_embed(
-        DiscordEmbed(description=error, color=0xDC143C, author={"name": "Error"})
+        DiscordEmbed(
+            description=error[:MAX_DISCORD_EMBED_DESC_LENGTH],
+            color=0xDC143C,
+            author={"name": "Error"},
+        )
     )
     return webhook
 
@@ -44,8 +51,8 @@ def make_track_webhook_data(track: dict, artist: dict) -> DiscordWebhook:
     webhook.username = "SoundCloud"
     webhook.add_embed(
         DiscordEmbed(
-            title=track["title"],
-            description=track["description"],
+            title=track["title"][:MAX_DISCORD_EMBED_TITLE_LENGTH],
+            description=track["description"][:MAX_DISCORD_EMBED_DESC_LENGTH],
             url=track["permalink_url"],
             timestamp=track["last_modified"],
             thumbnail={"url": track["artwork_url"]},
@@ -81,7 +88,7 @@ def artist_callback(ch: pika.channel.Channel, method, properties, body):
                         DiscordEmbed(title="New", image={"url": new_value})
                     )
             content += "```"
-            webhook.content = content
+            webhook.content = content[:MAX_DISCORD_CONTENT_LENGTH]
         elif data["event"] == "deleted":
             webhook.embeds[0]["color"] = 0xDC143C
             webhook.url = config.get("watcher_webhook", "artist_deleted_webhook")
@@ -129,7 +136,7 @@ def track_callback(ch: pika.channel.Channel, method, properties, body):
         else:
             return
 
-        webhook.content = content
+        webhook.content = content[:MAX_DISCORD_CONTENT_LENGTH]
         result = webhook.execute()
         result.raise_for_status()
     except:
