@@ -1,9 +1,10 @@
-import datetime
 import json
 import logging
 import pathlib
 
 import pika
+import pika.channel
+import pika.spec
 from discord_webhook import DiscordEmbed, DiscordWebhook
 
 from .config import init_config
@@ -66,7 +67,12 @@ def make_track_webhook_data(track: dict, artist: dict) -> DiscordWebhook:
     return webhook
 
 
-def artist_callback(ch: pika.channel.Channel, method, properties, body):
+def artist_callback(
+    ch: pika.channel.Channel,
+    method: pika.spec.Basic.Deliver,
+    properties: pika.spec.BasicProperties,
+    body: bytes,
+):
     try:
         data = json.loads(body.decode("utf-8"))
         webhook = make_artist_webhook_data(data["artist"])
@@ -96,10 +102,18 @@ def artist_callback(ch: pika.channel.Channel, method, properties, body):
             return
         result = webhook.execute()
         result.raise_for_status()
+        ch.basic_ack(method.delivery_tag)
     except:
         logging.exception("Could not send data")
+        ch.basic_nack(method.delivery_tag)
 
-def track_callback(ch: pika.channel.Channel, method, properties, body):
+
+def track_callback(
+    ch: pika.channel.Channel,
+    method: pika.spec.Basic.Deliver,
+    properties: pika.spec.BasicProperties,
+    body: bytes,
+):
     try:
         data = json.loads(body.decode("utf-8"))
         webhook = make_track_webhook_data(data["track"], data["artist"])
@@ -139,33 +153,44 @@ def track_callback(ch: pika.channel.Channel, method, properties, body):
         webhook.content = content[:MAX_DISCORD_CONTENT_LENGTH]
         result = webhook.execute()
         result.raise_for_status()
+        ch.basic_ack(method.delivery_tag)
     except:
         logging.exception("Could not send data")
+        ch.basic_nack(method.delivery_tag)
 
-def error_callback(ch: pika.channel.Channel, method, properties, body):
+
+def error_callback(
+    ch: pika.channel.Channel,
+    method: pika.spec.Basic.Deliver,
+    properties: pika.spec.BasicProperties,
+    body: bytes,
+):
     try:
         msg = body.decode("utf-8")
         webhook = make_error_webhook_data(msg)
         webhook.url = config.get("watcher_webhook", "error_webhook")
         result = webhook.execute()
         result.raise_for_status()
+        ch.basic_ack(method.delivery_tag)
     except:
         logging.exception("Could not send data")
+        ch.basic_nack(method.delivery_tag)
+
 
 def run():
     # init rabbitmq
-    channel = init_rabbitmq(config.get("rabbit", "url"))
-    
+    channel: pika.channel.Channel = init_rabbitmq(config.get("rabbit", "url"))
+
     error_queue = channel.queue_declare("errors")
     artist_queue = channel.queue_declare("artists")
     track_queue = channel.queue_declare("tracks")
-    
+
     channel.queue_bind("artists", "artists", routing_key="#")
     channel.queue_bind("errors", "errors", routing_key="#")
     channel.queue_bind("tracks", "tracks", routing_key="#")
-    
-    channel.basic_consume("artists", artist_callback, auto_ack=True)
-    channel.basic_consume("errors", error_callback, auto_ack=True)
-    channel.basic_consume("tracks", track_callback, auto_ack=True)
-    
+
+    channel.basic_consume("artists", artist_callback)
+    channel.basic_consume("errors", error_callback)
+    channel.basic_consume("tracks", track_callback)
+
     channel.start_consuming()

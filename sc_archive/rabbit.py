@@ -1,4 +1,5 @@
 import pika
+import pika.channel
 
 def init_rabbitmq(url: str) -> pika.channel.Channel:
     conn = pika.BlockingConnection(pika.URLParameters(url))

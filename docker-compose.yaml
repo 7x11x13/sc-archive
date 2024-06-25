@@ -17,6 +17,7 @@ services:
     image: rabbitmq:3
     restart: always
     container_name: 'rabbitmq'
+    hostname: 'rabbitmq'
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 1s
