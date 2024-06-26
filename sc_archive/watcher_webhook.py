@@ -52,8 +52,8 @@ def make_track_webhook_data(track: dict, artist: dict) -> DiscordWebhook:
     webhook.username = "SoundCloud"
     webhook.add_embed(
         DiscordEmbed(
-            title=track.get("title", "")[:MAX_DISCORD_EMBED_TITLE_LENGTH],
-            description=track.get("description", "")[:MAX_DISCORD_EMBED_DESC_LENGTH],
+            title=(track["title"] or "")[:MAX_DISCORD_EMBED_TITLE_LENGTH],
+            description=(track["description"] or "")[:MAX_DISCORD_EMBED_DESC_LENGTH],
             url=track["permalink_url"],
             timestamp=track["last_modified"],
             thumbnail={"url": track["artwork_url"]},
