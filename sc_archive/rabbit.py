@@ -6,18 +6,9 @@ def init_rabbitmq(url: str) -> pika.channel.Channel:
     channel = conn.channel()
     channel.exchange_declare(
         "errors",
-        exchange_type="topic"
+        exchange_type="topic",
     )
-    channel.exchange_declare(
-        "tracks",
-        exchange_type="topic"
-    )
-    channel.exchange_declare(
-        "artists",
-        exchange_type="topic"
-    )
-    channel.exchange_declare(
-        "track_download",
-        exchange_type="topic"
-    )
+    channel.exchange_declare("tracks", exchange_type="topic", durable=True)
+    channel.exchange_declare("artists", exchange_type="topic", durable=True)
+    channel.exchange_declare("track_download", exchange_type="topic", durable=True)
     return channel
