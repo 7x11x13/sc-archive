@@ -10,7 +10,7 @@ setup(
         "pika",
         "psycopg2",
         "scdl>=2.9.5",
-        "soundcloud-v2>=1.3.7",
+        "soundcloud-v2>=1.5.2",
         "sqlalchemy>=1.4.0,<2.0.0",
     ],
     python_requires=">=3.7",
