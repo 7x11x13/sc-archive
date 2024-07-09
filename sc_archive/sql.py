@@ -1,10 +1,18 @@
 import datetime
 from typing import Union
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
-                        create_engine)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    create_engine,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+
 
 class SQLObj:
     @classmethod
@@ -15,7 +23,9 @@ class SQLObj:
                 data[column] = getattr(dataclass, column)
         return cls(**data)
 
-    def update_from_dataclass(self, dataclass) -> dict[str, tuple[Union[str, int], Union[str, int]]]:
+    def update_from_dataclass(
+        self, dataclass
+    ) -> dict[str, tuple[Union[str, int], Union[str, int]]]:
         changes = {}
         for column in self.__table__.columns.keys():
             if column == "last_modified":
@@ -41,7 +51,10 @@ class SQLObj:
             data[column] = value
         return data
 
+
 Base = declarative_base()
+
+
 class SQLArtist(Base, SQLObj):
     __tablename__ = "artist"
     id = Column(Integer, primary_key=True)
@@ -49,9 +62,10 @@ class SQLArtist(Base, SQLObj):
     last_modified = Column(DateTime, nullable=False)
     permalink_url = Column(String, nullable=False)
     username = Column(String, nullable=False)
-    
+
     deleted = Column(DateTime)
     tracking = Column(Boolean, nullable=False, default=True)
+
 
 class SQLTrack(Base, SQLObj):
     __tablename__ = "track"
@@ -65,9 +79,10 @@ class SQLTrack(Base, SQLObj):
     title = Column(String, nullable=False)
     downloadable = Column(Boolean, nullable=False)
     purchase_url = Column(String)
-    
+
     deleted = Column(DateTime)
     file_path = Column(String)
+
 
 def init_sql(url: str) -> sessionmaker:
     engine = create_engine(url)

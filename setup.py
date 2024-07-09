@@ -9,7 +9,7 @@ setup(
         "discord-webhook",
         "pika",
         "psycopg2",
-        "scdl>=2.9.5",
+        "scdl>=2.11.0",
         "soundcloud-v2>=1.5.2",
         "sqlalchemy>=1.4.0,<2.0.0",
     ],

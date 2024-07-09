@@ -5,6 +5,7 @@ from configparser import ConfigParser
 
 logger = logging.getLogger(__name__)
 
+
 def init_config() -> ConfigParser:
     config = ConfigParser()
     config_file = os.getenv("CONFIG_FILE_PATH")

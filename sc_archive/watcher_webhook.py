@@ -103,7 +103,7 @@ def artist_callback(
         result = webhook.execute()
         result.raise_for_status()
         ch.basic_ack(method.delivery_tag)
-    except:
+    except Exception:
         logging.exception("Could not send data")
         ch.basic_nack(method.delivery_tag)
 
@@ -154,7 +154,7 @@ def track_callback(
         result = webhook.execute()
         result.raise_for_status()
         ch.basic_ack(method.delivery_tag)
-    except:
+    except Exception:
         logging.exception("Could not send data")
         ch.basic_nack(method.delivery_tag)
 
@@ -172,7 +172,7 @@ def error_callback(
         result = webhook.execute()
         result.raise_for_status()
         ch.basic_ack(method.delivery_tag)
-    except:
+    except Exception:
         logging.exception("Could not send data")
         ch.basic_nack(method.delivery_tag)
 
