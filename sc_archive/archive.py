@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import pathlib
+import random
 import subprocess
 import threading
 import time
@@ -264,7 +265,9 @@ def run():
             with Session() as session:
                 # get all not deleted artists
                 artists = {a.id: a for a in session.query(SQLArtist).all()}
-                for artist in sc.get_user_following(user_id, limit=5000):
+                following = list(sc.get_user_following(user_id, limit=5000))
+                random.shuffle(following)
+                for artist in following:
                     # remove utc timezone to compare with database artist
                     artist.last_modified = artist.last_modified.replace(tzinfo=None)
                     if artist.id in artists:
