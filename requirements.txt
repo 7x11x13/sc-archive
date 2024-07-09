@@ -12,9 +12,10 @@ pika==1.3.2
 psycopg2==2.9.9
 python-dateutil==2.9.0.post0
 requests==2.32.3
+-e git+https://github.com/7x11x13/sc-archive@859f88ea5e2eecfd43dfffd44ccbd1a0f2b2e017#egg=sc_archive
 scdl==2.11.0
 six==1.16.0
-soundcloud-v2==1.5.2
+soundcloud-v2==1.5.3
 SQLAlchemy==1.4.52
 termcolor==2.4.0
 tqdm==4.66.4
