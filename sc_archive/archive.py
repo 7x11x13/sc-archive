@@ -48,9 +48,9 @@ def run():
         user_id = int(config.get("soundcloud", "user_id"))
         base_url = config.get("soundcloud", "cookie_server_url")
         api_key = config.get("soundcloud", "cookie_server_api_key")
-        url = urllib.parse.urljoin(base_url, f"/get_cookies/soundcloud/{user_id}")
+        url = urllib.parse.urljoin(base_url, f"/cookies/soundcloud/{user_id}")
         auth_token = None
-        with requests.get(url, headers={"X-API-Key": api_key}) as r:
+        with requests.get(url, headers={"Cookie-Relay-API-Key": api_key}) as r:
             r.raise_for_status()
             for cookie in r.json():
                 if cookie["name"] == "oauth_token":
