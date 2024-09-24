@@ -102,10 +102,8 @@ def artist_callback(
             return
         result = webhook.execute()
         result.raise_for_status()
-        ch.basic_ack(method.delivery_tag)
     except Exception:
         logging.exception("Could not send data")
-        ch.basic_nack(method.delivery_tag)
 
 
 def track_callback(
@@ -153,10 +151,8 @@ def track_callback(
         webhook.content = content[:MAX_DISCORD_CONTENT_LENGTH]
         result = webhook.execute()
         result.raise_for_status()
-        ch.basic_ack(method.delivery_tag)
     except Exception:
         logging.exception("Could not send data")
-        ch.basic_nack(method.delivery_tag)
 
 
 def error_callback(
@@ -171,10 +167,8 @@ def error_callback(
         webhook.url = config.get("watcher_webhook", "error_webhook")
         result = webhook.execute()
         result.raise_for_status()
-        ch.basic_ack(method.delivery_tag)
     except Exception:
         logging.exception("Could not send data")
-        ch.basic_nack(method.delivery_tag)
 
 
 def run():
@@ -189,8 +183,8 @@ def run():
     channel.queue_bind("errors", "errors", routing_key="#")
     channel.queue_bind("tracks", "tracks", routing_key="#")
 
-    channel.basic_consume("artists", artist_callback)
-    channel.basic_consume("errors", error_callback)
-    channel.basic_consume("tracks", track_callback)
+    channel.basic_consume("artists", artist_callback, auto_ack=True)
+    channel.basic_consume("errors", error_callback, auto_ack=True)
+    channel.basic_consume("tracks", track_callback, auto_ack=True)
 
     channel.start_consuming()
