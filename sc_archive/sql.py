@@ -2,6 +2,7 @@ import datetime
 from typing import Union
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -57,7 +58,7 @@ Base = declarative_base()
 
 class SQLArtist(Base, SQLObj):
     __tablename__ = "artist"
-    id = Column(Integer, primary_key=True)
+    id = Column(BigInteger, primary_key=True)
     avatar_url = Column(String)
     last_modified = Column(DateTime, nullable=False)
     permalink_url = Column(String, nullable=False)
@@ -69,8 +70,8 @@ class SQLArtist(Base, SQLObj):
 
 class SQLTrack(Base, SQLObj):
     __tablename__ = "track"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("artist.id"), index=True)
+    id = Column(BigInteger, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("artist.id"), index=True)
     artwork_url = Column(String)
     description = Column(String)
     full_duration = Column(Integer, nullable=False)

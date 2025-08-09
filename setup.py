@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="sc-archive",
-    version="1.0.4",
+    version="1.0.5",
     packages=find_packages(),
     author="7x11x13",
     install_requires=[
