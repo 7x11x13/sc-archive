@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="sc-archive",
-    version="1.0.5",
+    version="1.0.6",
     packages=find_packages(),
     author="7x11x13",
     install_requires=[
@@ -10,7 +10,7 @@ setup(
         "pika",
         "psycopg2",
         "scdl>=3.0.0",
-        "soundcloud-v2>=1.5.3",
+        "soundcloud-v2>=1.6.1",
         "sqlalchemy>=1.4.0,<2.0.0",
     ],
     python_requires=">=3.7",
