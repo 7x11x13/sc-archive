@@ -17,7 +17,6 @@ Pygments==2.20.0
 python-dateutil==2.9.0.post0
 requests==2.33.1
 rich==15.0.0
--e git+https://github.com/7x11x13/sc-archive.git@9a803bbe43ac91cf360a6c895e1e584891fbbe57#egg=sc_archive
 scdl==3.0.4
 six==1.17.0
 soundcloud-v2==1.7.0
