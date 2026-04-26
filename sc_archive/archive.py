@@ -209,6 +209,8 @@ def run():
             logger.exception("Could not download track")
             log_error(f"Could not download track: {track.permalink_url}")
             return None
+        finally:
+            time.sleep(1)
 
     def download_tracks(session, artist: User):
         sc = get_sc_client()
@@ -289,6 +291,7 @@ def run():
                         log_error(
                             f"Could not download tracks for {artist.permalink_url}"
                         )
+                    time.sleep(1)
                 # remaining artists are unfollowed or deleted artists
                 for artist_id, artist in artists.items():
                     if not artist.tracking:

@@ -13,7 +13,7 @@ requests==2.32.4
 -e git+https://github.com/7x11x13/sc-archive@7bd84df2a6f450d7a4648b69ac7dcb845f0d34d0#egg=sc_archive
 scdl==3.0.0
 six==1.17.0
-soundcloud-v2==1.6.1
+soundcloud-v2==1.7.0
 SQLAlchemy==1.4.54
 urllib3==2.5.0
 yt-dlp==2025.7.21
