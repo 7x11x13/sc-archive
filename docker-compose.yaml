@@ -7,6 +7,7 @@ networks:
 volumes:
   rabbit_data:
   postgres_data:
+  db_dumps:
 
 secrets:
   config:
@@ -26,6 +27,8 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=user
       - RABBITMQ_DEFAULT_PASS=password
+    labels:
+      - "docker-volume-backup.stop-during-backup=true"
     volumes:
       - rabbit_data:/var/lib/rabbitmq
     networks:
@@ -43,8 +46,11 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=trust
       - POSTGRES_USER=archive
       - POSTGRES_DB=archive
+    labels:
+      - "docker-volume-backup.archive-pre=/bin/sh -c 'pg_dump -U archive -d archive -f /dumps/archive.sql'"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - db_dumps:/dumps
     networks:
       - archive_net
   archive:
@@ -61,5 +67,22 @@ services:
       - CONFIG_FILE_PATH=/run/secrets/config
     volumes:
       - ${ARCHIVE_PATH}:/app/soundcloud
+    networks:
+      - archive_net
+  backup:
+    image: offen/docker-volume-backup:v2.48.0
+    restart: always
+    container_name: 'backup'
+    environment:
+      - BACKUP_CRON_EXPRESSION=0 3 * * *
+      - BACKUP_RETENTION_DAYS=7
+      - BACKUP_FILENAME=archive-backup-%Y-%m-%dT%H-%M-%S.tar.gz
+      - BACKUP_PRUNING_PREFIX=archive-backup-
+      - BACKUP_COMPRESSION=gz
+    volumes:
+      - db_dumps:/backup/postgres-dumps:ro
+      - rabbit_data:/backup/rabbit:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${ARCHIVE_PATH}/backups:/archive
     networks:
       - archive_net
