@@ -1,9 +1,11 @@
 import json
 import logging
 import pathlib
+import time
 
 import pika
 import pika.channel
+import pika.exceptions
 import pika.spec
 from discord_webhook import DiscordEmbed, DiscordWebhook
 
@@ -172,19 +174,30 @@ def error_callback(
 
 
 def run():
-    # init rabbitmq
-    channel: pika.channel.Channel = init_rabbitmq(config.get("rabbit", "url"))
+    while True:
+        try:
+            channel: pika.channel.Channel = init_rabbitmq(
+                config.get("rabbit", "url")
+            )
 
-    error_queue = channel.queue_declare("errors")
-    artist_queue = channel.queue_declare("artists")
-    track_queue = channel.queue_declare("tracks")
+            channel.queue_declare("errors")
+            channel.queue_declare("artists")
+            channel.queue_declare("tracks")
 
-    channel.queue_bind("artists", "artists", routing_key="#")
-    channel.queue_bind("errors", "errors", routing_key="#")
-    channel.queue_bind("tracks", "tracks", routing_key="#")
+            channel.queue_bind("artists", "artists", routing_key="#")
+            channel.queue_bind("errors", "errors", routing_key="#")
+            channel.queue_bind("tracks", "tracks", routing_key="#")
 
-    channel.basic_consume("artists", artist_callback, auto_ack=True)
-    channel.basic_consume("errors", error_callback, auto_ack=True)
-    channel.basic_consume("tracks", track_callback, auto_ack=True)
+            channel.basic_consume("artists", artist_callback, auto_ack=True)
+            channel.basic_consume("errors", error_callback, auto_ack=True)
+            channel.basic_consume("tracks", track_callback, auto_ack=True)
 
-    channel.start_consuming()
+            channel.start_consuming()
+        except (
+            pika.exceptions.AMQPConnectionError,
+            pika.exceptions.ConnectionClosed,
+            pika.exceptions.StreamLostError,
+            pika.exceptions.ChannelClosed,
+        ):
+            logging.exception("Webhook consumer lost rabbit connection, reconnecting in 5s")
+            time.sleep(5)

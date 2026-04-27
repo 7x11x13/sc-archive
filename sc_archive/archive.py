@@ -219,7 +219,7 @@ def run():
             t.id: t
             for t in session.query(SQLTrack).filter(SQLTrack.user_id == artist.id).all()
         }
-        for track in sc.get_user_tracks(artist.id, limit=1000):
+        for track in sc.get_user_tracks(artist.id, limit=200):
             # remove utc timezone to compare with database track
             track.last_modified = track.last_modified.replace(tzinfo=None)
             if track.id in tracks:

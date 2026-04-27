@@ -3,7 +3,10 @@ import pika.channel
 
 
 def init_rabbitmq(url: str) -> pika.channel.Channel:
-    conn = pika.BlockingConnection(pika.URLParameters(url))
+    params = pika.URLParameters(url)
+    params.heartbeat = 600
+    params.blocked_connection_timeout = 300
+    conn = pika.BlockingConnection(params)
     channel = conn.channel()
     channel.exchange_declare(
         "errors",
